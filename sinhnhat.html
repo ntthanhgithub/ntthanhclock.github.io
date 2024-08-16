@@ -1,0 +1,170 @@
+﻿<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>Sinh nhật</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <script src="scripts/jquery.js"></script>
+    <link rel="stylesheet" type="text/css" href="style/bootstrap.css" />
+    <script src="scripts/bootstrap.js"></script>
+    <link rel="stylesheet" href="style/font-awesome.min.css" />
+    <script src="scripts/JsStore-1.2.2.min.js "></script>
+    <script>
+        var DbConnection = new JsStore.Instance();
+		
+        window.onload = function () {
+            initiateDb();
+            $('#btnThembanghi').click(function () {
+                window.location.href = 'addSinhnhat.html';
+            })
+            $('#tblGrid tbody').on('click', '.edit', function () {
+                var itemid = $(this).parents().eq(1).attr('itemid');
+                window.location.href = 'addSinhnhat.html?id=' + itemid;
+            });
+            $('#tblGrid tbody').on('click', '.delete', function () {
+                var Result = confirm('Are you sure, you want to delete?');
+                if (Result) {
+                    var itemid = $(this).parents().eq(1).attr('itemid');
+                    deleteData(itemid);
+                }
+            });
+        };
+
+        function deleteData(itemid) {
+            DbConnection.delete({
+                From: 'Sinhnhat',
+                Where: {
+                    Id: Number(itemid)
+                }
+            }, function (rowsDeleted) {
+                console.log(rowsDeleted + ' rows deleted');
+                if (rowsDeleted > 0) {
+                    showTableData();
+                }
+            }, function (error) {
+                alert(error.Message);
+            })
+        }
+
+        function initiateDb() {
+            var DbName = "Sinhnhat";
+            JsStore.isDbExist(DbName, function (isExist) {
+                if (isExist) {
+                    DbConnection.openDb(DbName);
+                    showTableData();
+                } else {
+                    var DataBase = getDatabase();
+                    DbConnection.createDb(DataBase);
+                    insertSinhnhat();
+                    showTableData();
+                }
+            });
+        }
+
+        function insertSinhnhat() {
+            var sinhnat = getSinhnhat();
+            DbConnection.insert({
+                Into: "Sinhnhat",
+                Values: sinhnhat
+            }, function (rowsAdded) {
+
+            }, function (err) {
+                console.log(err);
+                alert('Error Occured while adding data')
+            })
+        }
+
+        function getDatabase() {
+            var TblSinhnhat = {
+                Name: "Sinhnhat",
+                Columns: [{
+                        Name: "Id",
+                        PrimaryKey: true,
+                        AutoIncrement: true
+                    },
+                    {
+                        Name: "Name",
+                        NotNull: true,
+                        DataType: "string"
+                    },
+                    {
+                        Name: "Ngaysinh",
+                        DataType: "string",
+                        Default: '01/01/1900'
+                    }
+                ]
+            }
+            var DataBase = {
+                Name: "Sinhnhat",
+                Tables: [TblSinhnhat]
+            }
+            return DataBase;
+        }
+
+        //This function refreshes the table
+        function showTableData() {
+            DbConnection.select({
+                From: "Sinhnhat"
+            }, function (cacsinhnhat) {
+                var HtmlString = "";
+                cacsinhnhat.forEach(function (sinhnhat) {
+                    HtmlString += "<tr ItemId=" + sinhnhat.Id + "><td>" +
+                        sinhnhat.Name + "</td><td>" +
+                        sinhnhat.Ngaysinh + "</td><td>" +
+                        "<a href='#' class='edit'>Edit</a></td>" +
+                        "<td><a href='#' class='delete''>Delete</a></td>";
+                }, function (error) {
+                    console.log(error);
+                })
+                $('#tblGrid tbody').html(HtmlString);
+            });
+        }
+
+        function getSinhnhat() {
+            //Student Array
+            var cacsinhnhat = [{
+                    Name: 'Nguyễn Trung Thành',
+                    Ngaysinh: '07/03/1978'
+                },
+				{
+                    Name: 'Võ Thị Hương Giang',
+                    Ngaysinh: '15/03/1981'
+                },
+				{
+                    Name: 'Nguyễn Chi Mai',
+                    Ngaysinh: '30/08/2006'
+                }
+				,
+				{
+                    Name: 'Nguyễn Thành Nam',
+                    Ngaysinh: '02/09/2012'
+                }
+            ]
+            return cacsinhnhat;
+        }
+    </script>
+</head>
+<body>
+    <div class="row row-centered " style="margin-top:10px; ">
+        <div class="col-xs-12 col-sm-10 col-centered ">
+            <div style="text-align:center;">
+                <button id="btnThembanghi" class="btn btn-success">
+                    <i class="fa fa-plus" aria-hidden="true"></i> Thêm bản ghi</button>
+            </div>
+            <table id="tblGrid" class="table table-hover ">
+                <caption style="text-align:center;padding:7px 0px 7px 0px;background:#4f4f86;color:white;font-family:cursive;font-size:18px; ">Danh sách bản ghi</caption>
+                <thead>
+                    <tr>
+                        <th>Họ tên</th>
+                        <th>Ngày sinh</th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+    <link href="style/main.css " rel="stylesheet " type="text/css " />
+</body>
+</html>

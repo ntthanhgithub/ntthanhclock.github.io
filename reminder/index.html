@@ -1,0 +1,170 @@
+﻿<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>JsStore Example</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <script src="scripts/jquery.js"></script>
+    <link rel="stylesheet" type="text/css" href="style/bootstrap.css" />
+    <script src="scripts/bootstrap.js"></script>
+    <link rel="stylesheet" href="style/font-awesome.min.css" />
+    <script src="scripts/JsStore-1.2.2.min.js "></script>
+    <script>
+        var DbConnection = new JsStore.Instance();
+        window.onload = function () {
+            initiateDb();
+            $('#btnThembanghi').click(function () {
+                window.location.href = 'add.html';
+            })
+            $('#tblGrid tbody').on('click', '.edit', function () {
+                var itemid = $(this).parents().eq(1).attr('itemid');
+                window.location.href = 'add.html?id=' + itemid;
+            });
+            $('#tblGrid tbody').on('click', '.delete', function () {
+                var Result = confirm('Are you sure, you want to delete?');
+                if (Result) {
+                    var itemid = $(this).parents().eq(1).attr('itemid');
+                    deleteData(itemid);
+                }
+            });
+        };
+
+        function deleteData(itemid) {
+            DbConnection.delete({
+                From: 'Ngaygio',
+                Where: {
+                    Id: Number(itemid)
+                }
+            }, function (rowsDeleted) {
+                console.log(rowsDeleted + ' rows deleted');
+                if (rowsDeleted > 0) {
+                    showTableData();
+                }
+            }, function (error) {
+                alert(error.Message);
+            })
+        }
+
+        function initiateDb() {
+            var DbName = "Ngaygio";
+            JsStore.isDbExist(DbName, function (isExist) {
+                if (isExist) {
+                    DbConnection.openDb(DbName);
+                    showTableData();
+                } else {
+                    var DataBase = getDatabase();
+                    DbConnection.createDb(DataBase);
+                    insertNgaygio();
+                    showTableData();
+                }
+            });
+        }
+
+        function insertNgaygio() {
+            var ngaygio = getNgaygio();
+            DbConnection.insert({
+                Into: "Ngaygio",
+                Values: ngaygio
+            }, function (rowsAdded) {
+
+            }, function (err) {
+                console.log(err);
+                alert('Error Occured while adding data')
+            })
+        }
+
+        function getDatabase() {
+            var TblNgaygio = {
+                Name: "Ngaygio",
+                Columns: [{
+                        Name: "Id",
+                        PrimaryKey: true,
+                        AutoIncrement: true
+                    },
+                    {
+                        Name: "Name",
+                        NotNull: true,
+                        DataType: "string"
+                    },
+                    {
+                        Name: "Ngaysinh",
+                        DataType: "string",
+                        Default: '01/01/1900'
+                    },
+                    {
+                        Name: "Ngaymat",
+                        NotNull: true,
+                        DataType: "string"
+                    }
+                ]
+            }
+            var DataBase = {
+                Name: "Ngaygio",
+                Tables: [TblNgaygio]
+            }
+            return DataBase;
+        }
+
+        //This function refreshes the table
+        function showTableData() {
+            DbConnection.select({
+                From: "Ngaygio"
+            }, function (cacngaygio) {
+                var HtmlString = "";
+                cacngaygio.forEach(function (ngaygio) {
+                    HtmlString += "<tr ItemId=" + ngaygio.Id + "><td>" +
+                        ngaygio.Name + "</td><td>" +
+                        ngaygio.Ngaysinh + "</td><td>" +
+                        ngaygio.Ngaymat + "</td><td>" +
+                        "<a href='#' class='edit'>Edit</a></td>" +
+                        "<td><a href='#' class='delete''>Delete</a></td>";
+                }, function (error) {
+                    console.log(error);
+                })
+                $('#tblGrid tbody').html(HtmlString);
+            });
+        }
+
+        function getNgaygio() {
+            //Student Array
+            var cacngaygio = [{
+                    Name: 'Nguyễn Thị Ba',
+                    Ngaysinh: '01/01/1918',
+                    Ngaymat: '01/01/2011'
+                },
+				{
+                    Name: 'Nguyễn Văn Nghi',
+                    Ngaysinh: '01/01/1919',
+                    Ngaymat: '01/01/1998'
+                }
+            ]
+            return cacngaygio;
+        }
+    </script>
+</head>
+
+<body>
+    <div class="row row-centered " style="margin-top:10px; ">
+        <div class="col-xs-12 col-sm-10 col-centered ">
+            <div style="text-align:center;">
+                <button id="btnThembanghi" class="btn btn-success">
+                    <i class="fa fa-plus" aria-hidden="true"></i> Thêm bản ghi</button>
+            </div>
+            <table id="tblGrid" class="table table-hover ">
+                <caption style="text-align:center;padding:7px 0px 7px 0px;background:#4f4f86;color:white;font-family:cursive;font-size:18px; ">Danh sách bản ghi</caption>
+                <thead>
+                    <tr>
+                        <th>Họ tên</th>
+                        <th>Ngày sinh</th>
+                        <th>Ngày mất</th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+    <link href="style/main.css " rel="stylesheet " type="text/css " />
+</body>
+</html>
